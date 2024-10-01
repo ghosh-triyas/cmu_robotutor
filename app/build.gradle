@@ -1,0 +1,141 @@
+apply plugin: 'com.android.application'
+
+android {
+
+    compileSdkVersion rootProject.ext.rtCompileSdkVersion
+    buildToolsVersion rootProject.ext.rtBuildToolsVersion
+    defaultConfig {
+        applicationId "cmu.xprize.robotutor"
+        minSdkVersion rootProject.ext.rtMinSdkVersion
+        targetSdkVersion rootProject.ext.rtTargetSdkVersion
+        versionCode rootProject.ext.rtVersionCode
+        versionName rootProject.ext.rtVersionName
+        // default is signed by the Android default key
+
+        multiDexEnabled true
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
+    // Create a variable called keystorePropertiesFile, and initialize it to your
+    // keystore.properties file, in the sample_config_files folder, inside app/src.
+    def keystorePropertiesFile = rootProject.file("app/src/sample_config_files/sample_keystore.properties")
+    // Initialize a new Properties() object called keystoreProperties
+    def keystoreProperties = new Properties()
+
+    // Load your keystore.properties file into the keystoreProperties object.
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
+    signingConfigs {
+        android {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
+    buildTypes {
+
+        release {
+            signingConfig signingConfigs.android
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            debuggable true
+        }
+
+        // This release includes the DEBUG selector and other various debug support features.
+        //
+        release_dbg {
+            debuggable true
+            signingConfig signingConfigs.android
+        }
+
+    }
+
+    // define apk naming behavior
+    // define apk naming behavior
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def project = "robotutor"
+            def SEP = "."
+            def buildType = variant.buildType.name
+            def version = variant.versionName
+
+            def newApkName = project + SEP + buildType + SEP + version + ".apk"
+//            new File(output.outputFile.parent, newApkName)
+            output.outputFileName = new File("./../../../../../build/", newApkName)
+        }
+    }
+
+    lintOptions {
+        // set to true to turn off analysis progress reporting by lint
+        quiet false
+        // if true, stop the gradle build if errors are found
+        abortOnError false
+        // if true, only report errors
+        ignoreWarnings true
+    }
+
+    apply from: "checkstyle.gradle"
+    afterEvaluate{
+        preBuild.dependsOn('checkstyle')
+        check.dependsOn 'checkstyle'
+    }
+
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.writingminds:FFmpegAndroid:0.3.2'
+    implementation 'com.google.guava:guava:25.0-android'
+    implementation 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'androidx.percentlayout:percentlayout:1.0.0'
+    implementation 'com.google.code.gson:gson:2.8.7'
+    implementation 'org.mp4parser:isoparser:1.9.41'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
+    implementation project(':comp_banner')
+    implementation project(':comp_ltkplus')
+    implementation project(':util')
+    implementation project(':mn_component')
+    implementation project(':comp_listener')
+    implementation project(':comp_reading')
+    implementation project(':comp_questions')
+    implementation project(':sm_component')
+    implementation project(':fw_component')
+    implementation project(':nl_component')
+    implementation project(':comp_math')
+    implementation project(':comp_akira')
+    implementation project(':comp_bubblepop')
+    implementation project(':comp_writing')
+    implementation project(':comp_pointtap')
+    implementation project(path: ':comp_ask')
+    implementation project(path: ':comp_session')
+    implementation project(path: ':comp_debug')
+    implementation project(':comp_logging')
+    implementation project(path: ':comp_counting')
+    implementation project(path: ':comp_counting2')
+    implementation project(path: ':comp_numberscale')
+    implementation project(path: ':comp_nd')
+    implementation project(path: ':comp_picmatch')
+    implementation project(path: ':comp_bigmath')
+    implementation project(path: ':comp_spelling')
+
+    implementation project(path: ':comp_intervention')
+    implementation 'com.github.RoboTutorLLC:ScreenRecordHelper:1.0.0'
+    implementation 'com.github.HBiSoft:HBRecorder:2.0.3'
+}
+
+task getVersionName() {
+    project.gradle.projectsEvaluated {
+        println "$project.android.defaultConfig.versionName"
+    }
+}
